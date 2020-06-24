@@ -1,0 +1,26 @@
+language: java
+
+jdk:
+  - openjdk8
+
+branches:
+  only:
+    - master
+
+install:
+  # Install ktlint for code style checking
+  - curl -sSLO https://github.com/shyiko/ktlint/releases/download/0.24.0/ktlint && chmod a+x ktlint
+
+script:
+  # Run the linter
+  - ./ktlint "**/*.kt"
+  # Run all tests in all sample directories
+  - |
+    set -e
+    for DIR in ./*/; do
+      if [ -f $DIR/gradlew ]; then
+        pushd $DIR
+        ./gradlew test --console=plain --info
+        popd
+      fi
+    done
