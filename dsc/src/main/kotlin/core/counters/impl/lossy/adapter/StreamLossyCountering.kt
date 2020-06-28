@@ -1,5 +1,6 @@
-package core.counters.lossy
+package core.counters.impl.lossy.adapter
 
+import core.counters.impl.lossy.LossyCounting
 import it.unimi.dsi.fastutil.objects.Object2LongMap
 import utils.LogProvider
 import java.io.File

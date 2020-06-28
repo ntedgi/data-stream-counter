@@ -1,25 +1,23 @@
-package core.counters.lossy
+package core.counters.impl.lossy
 
-import it.unimi.dsi.fastutil.objects.Object2LongMap
-import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap
+import core.counters.CMap
+import core.counters.StreamCounter
 import utils.LogProvider
 import utils.linfo
-import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.absoluteValue
 
-private typealias CMap<T> = Object2LongOpenHashMap<T>
 
 class LossyCounting<T>(
     private val iterationSize: Int,
     private val minAmountPerIteration: Int,
     concurrency: Int = Runtime.getRuntime().availableProcessors() * 8
-) : LogProvider() {
+) : StreamCounter<T>, LogProvider() {
     val gcCounter = AtomicInteger(0)
     private val currentStep = AtomicLong(0)
     private val counters = Array(concurrency) { CMap<T>() }
-    fun add(v: T, amount: Long = 1L) {
+    override fun add(v: T, amount: Long) {
         val step = currentStep.incrementAndGet()
         if (step % iterationSize == 0L) {
             gcCounter.incrementAndGet()
@@ -27,13 +25,12 @@ class LossyCounting<T>(
         }
         val mapIndex = v.hashCode().absoluteValue % counters.size
         val map = counters[mapIndex]
-
         synchronized(map) {
             map.addTo(v, amount)
         }
     }
 
-    fun complete(): Object2LongMap<T> {
+    override fun complete(): CMap<T> {
         performGC((currentStep.get() / iterationSize).toInt() * minAmountPerIteration)
         val result = CMap<T>(counters.sumBy { it.size })
         counters.forEach { result.putAll(it); it.clear() }
@@ -55,22 +52,4 @@ class LossyCounting<T>(
             }
         }
     }
-}
-
-fun main(args: Array<String>) {
-    val c = LossyCounting<String>(100_000, 2)
-    val lines = File("/home/naort/projects/data/cs_datasets/allht.txt").readLines()
-    repeat(1) {
-        lines.parallelStream().forEach { ht ->
-            c.add(ht)
-        }
-    }
-    File("/home/naort/projects/data/cs_datasets/out.txt").printWriter().use { pw ->
-        val result = c.complete()
-        result.object2LongEntrySet().sortedByDescending { it.longValue }.forEach {
-            pw.println("${it.key}:${it.longValue}")
-        }
-    }
-    println(c.gcCounter.getAndIncrement())
-    println("done")
 }
