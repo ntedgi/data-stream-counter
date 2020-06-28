@@ -20,5 +20,4 @@ fun main(args: Array<String>) {
     val c = StreamLossyCountering<String>(100_000, 2)
     val lines = File("/home/naort/projects/data/cs_datasets/allht.txt").bufferedReader().lines()
     c.count(lines)
-
 }
