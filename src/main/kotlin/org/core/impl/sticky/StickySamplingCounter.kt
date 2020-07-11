@@ -1,16 +1,15 @@
-package core.counters.impl.sticky.parallel
+package org.core.impl.sticky
 
-import core.counters.CMap
-import core.counters.StreamCounter
-import core.counters.impl.sticky.single.deriveSamplingRate
-import utils.LogProvider
-import utils.linfo
+import org.core.CMap
+import org.core.StreamCounter
+import org.utils.LogProvider
+import org.utils.linfo
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.absoluteValue
 import kotlin.math.ln
 import kotlin.random.Random
 
-class StreamStickySamplingModel<T>(
+class StickySamplingCounter<T>(
     frequency: Double,
     error: Double,
     probabilityOfFailure: Double,
@@ -51,6 +50,16 @@ class StreamStickySamplingModel<T>(
         }
     }
 
+    private fun deriveSamplingRate(itemSeqId: Long, t: Double): Int {
+        var currentSamplingRate = 1
+        var sum = 0.0
+        while (currentSamplingRate * t + sum < itemSeqId) {
+            sum += currentSamplingRate * t
+            currentSamplingRate *= 2
+        }
+        return currentSamplingRate
+    }
+
     override fun complete(): CMap<T> {
         val result = CMap<T>(counters.sumBy { it.size })
         counters.forEach { result.putAll(it); it.clear() }
@@ -78,15 +87,3 @@ class StreamStickySamplingModel<T>(
     private fun unsuccessfulCoinToss(): Boolean = rng.nextDouble() > 0.5
     private fun samplingRateHasChanged(prevRate: Int, currRate: Int): Boolean = currRate > prevRate
 }
-// Frequency: 0.01, Error: 0.0019 Probability of failure: 1.9E-4
-// (Brown, 11950)
-// (Blue, 28073)
-// (Yellow, 146250)
-// (Green, 312476)
-// (Red, 363885)
-// Frequency: 0.01, Error: 0.0019 Probability of failure: 1.9E-4
-// (Brown, 11956)
-// (Blue, 28074)
-// (Yellow, 146248)
-// (Green, 312479)
-// (Red, 363892)

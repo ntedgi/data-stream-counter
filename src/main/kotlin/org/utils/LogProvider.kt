@@ -1,4 +1,4 @@
-package utils
+package org.utils
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

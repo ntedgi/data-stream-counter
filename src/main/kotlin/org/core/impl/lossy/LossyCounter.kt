@@ -1,20 +1,20 @@
-package core.counters.impl.lossy
+package org.core.impl.lossy
 
-import core.counters.CMap
-import core.counters.StreamCounter
-import utils.LogProvider
-import utils.linfo
+import org.core.CMap
+import org.core.StreamCounter
+import org.utils.LogProvider
+import org.utils.linfo
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.absoluteValue
 
 
-class LossyCounting<T>(
+class LossyCounter<T>(
     private val iterationSize: Int,
     private val minAmountPerIteration: Int,
     concurrency: Int = Runtime.getRuntime().availableProcessors() * 8
 ) : StreamCounter<T>, LogProvider() {
-    val gcCounter = AtomicInteger(0)
+    private val gcCounter = AtomicInteger(0)
     private val currentStep = AtomicLong(0)
     private val counters = Array(concurrency) { CMap<T>() }
     override fun add(v: T, amount: Long) {
