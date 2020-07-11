@@ -2,8 +2,16 @@ language: java
 os:
   - osx
   - linux
+  - windows
 
-osx_image: xcode8
+jdk:
+  - openjdk8
+  - openjdk11
+  - openjdk-ea
+  - oraclejdk8
+  - oraclejdk11
+  - oraclejdk-ea
+
 
 after_success:
   - mvn clean test jacoco:report
